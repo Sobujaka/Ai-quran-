@@ -103,7 +103,7 @@
             background-color: #117a65;
         }
         .surah-item.active .btn-play {
-            background-color: #e74c3c; /* বাজানো অবস্থায় প্লে বাটন লাল দেখাবে বুঝার সুবিধার্থে */
+            background-color: #e74c3c;
         }
         .btn-download {
             background-color: #34495e;
@@ -117,7 +117,7 @@
 <body>
 
 <div class="container">
-    <h1>📖 আল-کোরআন অডিও প্লেয়ার</h1>
+    <h1>📖 আল-কোরআন অডিও প্লেয়ার</h1>
     
     <div class="audio-player">
         <div id="now-playing">তালিকা থেকে যেকোনো সূরা প্লে করুন</div>
@@ -129,12 +129,12 @@
 </div>
 
 <script>
-    // ১১৪টি সূরার লিস্ট। "url" এর জায়গায় আপনার .mp3 লিংক বসিয়ে দেবেন।
-    // প্রথম ৩টি সূরার লিংক ডেমো হিসেবে দেওয়া আছে।
+    // ১১৪টি সূরার লিস্ট। ১ম সূরায় আপনার দেওয়া লিংকটি বসানো হয়েছে।
+    // বাকি সূরাগুলোর জন্য "" (খালি ঘর) এর ভেতর আপনার লিংকগুলো বসিয়ে দেবেন।
     const surahs = [
-        { id: 1, name: "১. আল-ফাতিহা (Al-Fatihah)", url: "https://server8.mp3quran.net/afs/001.mp3" },
-        { id: 2, name: "২. আল-বাকারাহ (Al-Baqarah)", url: "https://server8.mp3quran.net/afs/002.mp3" },
-        { id: 3, name: "৩. আল-ইমরান (Al-Imran)", url: "https://server8.mp3quran.net/afs/003.mp3" },
+        { id: 1, name: "১. আল-ফাতিহা (Al-Fatihah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/01%20Al-Fatiha.mp3?_gl=1*1huvwbk*_ga*OTA5NjczMjQ0LjE3ODEyOTA2NTE.*_ga_FMQ54P6BSS*czE3ODEyOTA2NTEkbzEkZzAkdDE3ODEyOTA2NTMkajU4JGwwJGgw*_ga_VM5FLK8BFM*czE3ODEyOTA2NTEkbzEkZzAkdDE3ODEyOTA2NTMkajU4JGwwJGgw" },
+        { id: 2, name: "২. আল-বাকারাহ (Al-Baqarah)", url: "" },
+        { id: 3, name: "৩. আল-ইমরান (Al-Imran)", url: "" },
         { id: 4, name: "৪. আন-নিসা (An-Nisa)", url: "" },
         { id: 5, name: "৫. আল-মায়িদাহ (Al-Ma'idah)", url: "" },
         { id: 6, name: "৬. আল-আনআম (Al-An'am)", url: "" },
@@ -149,7 +149,7 @@
         { id: 15, name: "১৫. আল-হিজর (Al-Hijr)", url: "" },
         { id: 16, name: "১৬. আন-নাহল (An-Nahl)", url: "" },
         { id: 17, name: "১৭. আল-ইসরা (Al-Isra)", url: "" },
-        { id: 18, name: "১৮. আল-कাহফ (Al-Kahf)", url: "" },
+        { id: 18, name: "১৮. আল-কাহফ (Al-Kahf)", url: "" },
         { id: 19, name: "১৯. মারয়াম (Maryam)", url: "" },
         { id: 20, name: "২০. ত্বোয়া-হা (Ta-Ha)", url: "" },
         { id: 21, name: "২১. আল-আম্বিয়া (Al-Anbiya)", url: "" },
@@ -212,7 +212,7 @@
         { id: 78, name: "৭৮. আন-নাবা (An-Naba')", url: "" },
         { id: 79, name: "৭৯. আন-নাযিয়াত (An-Nazi'at)", url: "" },
         { id: 80, name: "৮০. আবাসা (Abasa)", url: "" },
-        { id: 81, name: "৮১. আত-তাকভীর (At-Takwir)", url: "" },
+        { id: 81, name: "৮১. আত-তაკভীর (At-Takwir)", url: "" },
         { id: 82, name: "৮২. আল-ইনফিতার (Al-Infitar)", url: "" },
         { id: 83, name: "৮৩. আল-মুতাফফিফীন (Al-Mutaffifin)", url: "" },
         { id: 84, name: "৮৪. আল-ইনশিকাক (Al-Inshiqaq)", url: "" },
@@ -238,7 +238,7 @@
         { id: 104, name: "১০৪. আল-হুমাযাহ (Al-Humazah)", url: "" },
         { id: 105, name: "১০৫. আল-ফীল (Al-Fil)", url: "" },
         { id: 106, name: "১০৬. কুরাইশ (Quraysh)", url: "" },
-        { id: 107, name: "১০৭. আল-মাউন (Al-Ma'un)", url: "" },
+        { id: 107, name: "১০৭. আল-മാউন (Al-Ma'un)", url: "" },
         { id: 108, name: "১০৮. আল-কাওসার (Al-Kawthar)", url: "" },
         { id: 109, name: "১০৯. আল-কাফিরুন (Al-Kafirun)", url: "" },
         { id: 110, name: "১১০. আন-নসর (An-Nasr)", url: "" },
@@ -253,13 +253,12 @@
     const nowPlaying = document.getElementById('now-playing');
     let currentTrackIndex = 0;
 
-    // ইউজার ইন্টারফেসে ১১৪টি সূরা, প্লে এবং ডাউনলোড বাটন তৈরি করা
+    // ইউজার ইন্টারফেস তৈরি
     surahs.forEach((surah, index) => {
         const item = document.createElement('div');
         item.classList.add('surah-item');
         item.setAttribute('data-index', index);
         
-        // ডাউনলোড বাটনটি তখনই কাজ করবে যখন আপনি একটি ভ্যালিড ডিরেক্ট mp3 লিংক দিবেন
         const downloadUrl = surah.url ? surah.url : "#";
         const downloadAttr = surah.url ? `download="${surah.name}.mp3"` : "";
 
@@ -289,7 +288,7 @@
             console.log("প্লে করতে সমস্যা হচ্ছে: ", error);
         });
         
-        // একটিভ ক্লাস ও ব্যাকগ্রাউন্ড ডিজাইন পরিবর্তন
+        // বাটন ও ক্লাসের স্টাইল পরিবর্তন
         document.querySelectorAll('.surah-item').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.btn-play').forEach(el => el.innerText = "▶ প্লে");
         
@@ -302,7 +301,7 @@
         
         nowPlaying.innerText = `এখন বাজছে: ${surah.name}`;
 
-        // ব্যাকগ্রাউন্ডে ব্রাউজার লক বা মিনিমাইজ থাকলে সার্ভিস সচল রাখা
+        // ব্যাকগ্রাউন্ড নোটিফিকেশন কন্ট্রোল (Chrome মিনিমাইজ বা লকড অবস্থায়)
         if ('mediaSession' in navigator) {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: surah.name,
@@ -334,4 +333,4 @@
 </script>
 
 </body>
-  </html>
+</html>
