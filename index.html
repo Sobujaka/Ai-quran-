@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>আল-কোরআন অডিও প্লেয়ার</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f4f7f6;
+            color: #333;
+            padding: 20px;
+        }
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .audio-player {
+            background: #eef2f3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+        #now-playing {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #16a085;
+        }
+        audio {
+            width: 100%;
+            outline: none;
+        }
+        .surah-list {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .surah-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+        .surah-item:last-child {
+            border-bottom: none;
+        }
+        .surah-item:hover {
+            background: #f9fbfb;
+        }
+        .surah-item.active {
+            background: #e8f8f5;
+            border-left: 5px solid #16a085;
+        }
+        .surah-info {
+            flex-grow: 1;
+            font-weight: 600;
+        }
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-play {
+            background-color: #16a085;
+            color: white;
+        }
+        .btn-play:hover {
+            background-color: #117a65;
+        }
+        .surah-item.active .btn-play {
+            background-color: #e74c3c;
+        }
+        .btn-download {
+            background-color: #34495e;
+            color: white;
+        }
+        .btn-download:hover {
+            background-color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📖 আল-কোরআন অডিও প্লেয়ার</h1>
+
+    <div class="audio-player">
+        <div id="now-playing">তালিকা থেকে যেকোনো সূরা প্লে করুন</div>
+        <audio id="main-audio" controls autoplay></audio>
+    </div>
+
+    <div class="surah-list" id="playlist">
+        </div>
+</div>
+
+<script>
+    // ১১৪টি সূরার লিস্ট। ১ম সূরায় আপনার দেওয়া লিংকটি বসানো হয়েছে।
+    // বাকি সূরাগুলোর জন্য "" (খালি ঘর) এর ভেতর আপনার লিংকগুলো বসিয়ে দেবেন।
+    const surahs = [
+        { id: 1, name: "১. আল-ফাতিহা (Al-Fatihah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/01%20Al-Fatiha.mp3" },
+        { id: 2, name: "২. আল-বাকারাহ (Al-Baqarah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/02%20Al-Baqara.mp3" },
+        { id: 3, name: "৩. আল-ইমরান (Al-Imran)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/03%20Alo%20Imran.mp3" },
+        { id: 4, name: "৪. আন-নিসা (An-Nisa)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/04%20An-Nisa.mp3" },
+        { id: 5, name: "৫. আল-মায়িদাহ (Al-Ma'idah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/05%20Al-Maidah.mp3" },
+        { id: 6, name: "৬. আল-আনআম (Al-An'am)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/06%20Al-Anam.mp3" },
+        { id: 7, name: "৭. আল-আরাফ (Al-A'raf)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/07%20Al-Araf.mp3" },
+        { id: 8, name: "৮. আল-আনফাল (Al-Anfal)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/08%20Al-Anfal.mp3" },
+        { id: 9, name: "৯. আত-তাওবাহ (At-Tawbah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/09%20At-Tawbah.mp3" },
+        { id: 10, name: "১০. ইউনুস (Yunus)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/10%20Yunus.mp3" },
+        { id: 11, name: "১১. হুদ (Hud)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/11%20Hud.mp3" },
+        { id: 12, name: "১২. ইউসুফ (Yusuf)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/12%20Yusuf.mp3" },
+        { id: 13, name: "১৩. আর-রাদ (Ar-Ra'd)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/13%20Ar-Rad.mp3" },
+        { id: 14, name: "১৪. ইব্রাহিম (Ibrahim)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/14%20Ibrahim.mp3" },
+        { id: 15, name: "১৫. আল-হিজর (Al-Hijr)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/15%20Al-Hijr.mp3" },
+        { id: 16, name: "১৬. আন-নাহল (An-Nahl)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/16%20An-Nahl.mp3" },
+        { id: 17, name: "১৭. আল-ইসরা (Al-Isra)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/17%20Bani%20Israil.mp3" },
+        { id: 18, name: "১৮. আল-কাহফ (Al-Kahf)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/18%20Al-Kahf.mp3" },
+        { id: 19, name: "১৯. মারয়াম (Maryam)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/19%20Maryam.mp3" },
+        { id: 20, name: "২০. ত্বোয়া-হা (Ta-Ha)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/20%20Ta-Ha.mp3" },
+        { id: 21, name: "২১. আল-আম্বিয়া (Al-Anbiya)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/21%20Al-Anbiya.mp3" },
+        { id: 22, name: "২২. আল-হাজ্জ (Al-Hajj)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/22%20Al-Hajj.mp3" },
+        { id: 23, name: "২৩. আল-মুমিনুন (Al-Mu'minun)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/23%20Al-Muminun.mp3" },
+        { id: 24, name: "২৪. আন-নূর (An-Nur)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/24%20An-Nur.mp3" },
+        { id: 25, name: "২৫. আল-ফুরকান (Al-Furqan)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/25%20Al-Furqan.mp3" },
+        { id: 26, name: "২৬. আশ-শুয়ারা (Ash-Shu'ara)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/26%20Ash-Shuara.mp3" },
+        { id: 27, name: "২৭. আন-নামল (An-Naml)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/27%20An%20Namal.mp3" },
+        { id: 28, name: "২৮. আল-কাসাস (Al-Qasas)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/28%20Al-Qasas.mp3" },
+        { id: 29, name: "২৯. আল-আনকাবুত (Al-Ankabut)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/29%20Al-Ankabut.mp3" },
+        { id: 30, name: "৩০. আর-রূম (Ar-Rum)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/30%20Ar-Rum.mp3" },
+        { id: 31, name: "৩১. লুকমান (Luqman)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/31%20Luqman.mp3" },
+        { id: 32, name: "৩২. আস-সাজদাহ (As-Sajdah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/32%20Sajdah.mp3" },
+        { id: 33, name: "৩৩. আল-আহজাব (Al-Ahzab)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/33%20Al-Ahzab.mp3" },
+        { id: 34, name: "৩৪. সাবা (Saba')", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/34%20Saba.mp3" },
+        { id: 35, name: "৩৫. ফাতির (Fatir)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/35%20Al-Fatir.mp3" },
+        { id: 36, name: "৩৬. ইয়াসিন (Ya-Sin)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/36%20Ya-Sin.mp3" },
+        { id: 37, name: "৩৭. আস-সাফফাত (As-Saffat)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/37%20As-Saffat.mp3" },
+        { id: 38, name: "৩৮. সোয়াদ (Sad)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/38%20Sad.mp3" },
+        { id: 39, name: "৩৯. আজ-জুমার (Az-Zumar)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/39%20Az-Zumar.mp3" },
+        { id: 40, name: "৪০. গাফির (Ghafir)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/40%20Al-Mumin.mp3" },
+        { id: 41, name: "৪১. ফুসসিলাত (Fussilat)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/41%20Ha-Mim%20Sajdah%20or%20Fussilat.mp3" },
+        { id: 42, name: "৪২. আশ-শূরা (Ash-Shura)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/42%20Ash-Shura.mp3" },
+        { id: 43, name: "৪৩. আজ-জুখরুফ (Az-Zukhruf)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/43%20Az-Zukhruf.mp3" },
+        { id: 44, name: "৪৪. আদ-দুখান (Ad-Dukhan)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/44%20Ad-Dukhan.mp3" },
+        { id: 45, name: "৪৫. আল-জাছিয়াহ (Al-Jathiyah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/45%20Al-Jathiyyah.mp3" },
+        { id: 46, name: "৪৬. আল-আহকাফ (Al-Ahqaf)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/46%20Al-Ahqaf.mp3" },
+        { id: 47, name: "৪৭. মুহাম্মদ (Muhammad)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/47%20Muhammad.mp3" },
+        { id: 48, name: "৪৮. আল-ফাতহ (Al-Fath)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/48%20Al-Fath.mp3" },
+        { id: 49, name: "৪৯. আল-হুজুরাত (Al-Hujurat)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/49%20Al-Hujurat.mp3" },
+        { id: 50, name: "৫০. ক্বাফ (Qaf)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/50%20Qaf.mp3" },
+        { id: 51, name: "৫১. আজ-জারিয়াত (Adh-Dhariyat)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/51%20Adh-Dhariyyat.mp3" },
+        { id: 52, name: "৫২. আত-তূর (At-Tur)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/52%20At-Tur.mp3" },
+        { id: 53, name: "৫৩. আন-নাজম (An-Najm)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/53%20An-Najm.mp3" },
+        { id: 54, name: "৫৪. আল-ক আমার (Al-Qamar)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/54%20Al-Qamar.mp3" },
+        { id: 55, name: "৫৫. আর-রহমান (Ar-Rahman)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/55%20Ar-Rahman.mp3" },
+        { id: 56, name: "৫৬. আল-ওয়াকিয়াহ (Al-Waqi'ah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/56%20Al-Waqiah.mp3" },
+        { id: 57, name: "৫৭. আল-হাদিদ (Al-Hadid)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/57%20Al-Hadid.mp3" },
+        { id: 58, name: "৫৮. আল-মুজাদালাহ (Al-Mujadilah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/58%20Al-Mujadilah.mp3" },
+        { id: 59, name: "৫৯. আল-হাশর (Al-Hashr)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/59%20Al-Hashr.mp3" },
+        { id: 60, name: "৬০. আল-মুমতাহানাহ (Al-Mumtahanah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/60%20Al-Mumtahina.mp3" },
+        { id: 61, name: "৬১. আস-সাফ (As-Saff)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/61%20As-Saff.mp3" },
+        { id: 62, name: "৬২. আল-জুমুআহ (Al-Jumu'ah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/62%20Al-Jumua.mp3" },
+        { id: 63, name: "৬৩. আল-মুনাফিকুন (Al-Munafiqun)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/63%20Al-Munafiqun.mp3" },
+        { id: 64, name: "৬৪. আত-তাগাবুন (At-Taghabun)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/64%20At-Taghabun.mp3" },
+        { id: 65, name: "৬৫. আত-তালাক (At-Talaq)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/65%20At-Talaq.mp3" },
+        { id: 66, name: "৬৬. আত-তাহরীম (At-Tahrim)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/66%20At-Tahrim.mp3" },
+        { id: 67, name: "৬৭. আল-মূলক (Al-Mulk)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/67%20Al-Mulk.mp3" },
+        { id: 68, name: "৬৮. আল-কালাম (Al-Qalam)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/68%20Al-Qalam.mp3" },
+        { id: 69, name: "৬৯. আল-হাক্কাহ (Al-Haqqah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/69%20Al-Haqqa.mp3" },
+        { id: 70, name: "৭০. আল-মাআরিজ (Al-Ma'arij)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/70%20Al-Maarij.mp3" },
+        { id: 71, name: "৭১. নূহ (Nuh)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/71%20Nuh.mp3" },
+        { id: 72, name: "৭২. আল-জ্বিন (Al-Jinn)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/72%20Al-Jinn.mp3" },
+        { id: 73, name: "৭৩. আল-মুযযাম্মিল (Al-Muzzammil)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/73%20Al-Muzzammil.mp3" },
+        { id: 74, name: "৭৪. আল-মুদ্দাসসির (Al-Muddaththir)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/74%20Al-Muddaththir.mp3" },
+        { id: 75, name: "৭৫. আল-কিয়ামাহ (Al-Qiyamah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/75%20Al-Qiyamah.mp3" },
+        { id: 76, name: "৭৬. আল-ইনসান (Al-Insan)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/76%20Ad-Dahr.mp3" },
+        { id: 77, name: "৭৭. আল-মুরসালাত (Al-Mursalat)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/77%20Al-Mursalat.mp3" },
+        { id: 78, name: "৭৮. আন-নাবা (An-Naba')", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/78%20An-Naba.mp3" },
+        { id: 79, name: "৭৯. আন-নাযিয়াত (An-Nazi'at)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/79%20An-Naziat.mp3" },
+        { id: 80, name: "৮০. আবাসা (Abasa)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/80%20Abasa.mp3" },
+        { id: 81, name: "৮১. আত-তაკভীর (At-Takwir)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/81%20At-Takwir.mp3" },
+        { id: 82, name: "৮২. আল-ইনফিতার (Al-Infitar)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/82%20Al-Infitar.mp3" },
+        { id: 83, name: "৮৩. আল-মুতাফফিফীন (Al-Mutaffifin)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/83%20Al-Mutaffifin.mp3" },
+        { id: 84, name: "৮৪. আল-ইনশিকাক (Al-Inshiqaq)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/84%20Al-Inshiqaq.mp3" },
+        { id: 85, name: "৮৫. আল-বুরুজ (Al-Buruj)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/85%20Al-Buruj.mp3" },
+        { id: 86, name: "৮৬. আত-তারিক (At-Tariq)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/86%20At-Tariq.mp3" },
+        { id: 87, name: "৮৭. আল-আলা (Al-A'la)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/87%20Al-Ala.mp3" },
+        { id: 88, name: "৮৮. আল-গাশিয়াহ (Al-Ghashiyah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/88%20Al-Ghashiyah.mp3" },
+        { id: 89, name: "৮৯. আল-ফজর (Al-Fajr)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/89%20Al-Fajr.mp3" },
+        { id: 90, name: "৯০. আল-বালাদ (Al-Balad)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/90%20Al-Balad.mp3" },
+        { id: 91, name: "৯১. আশ-শামস (Ash-Shams)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/91%20Ash-Shams.mp3" },
+        { id: 92, name: "৯২. আল-লাইল (Al-Layl)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/92%20Al-Layl.mp3" },
+        { id: 93, name: "৯৩. আদ-দুহা (Ad-Duha)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/93%20Ad-Duha.mp3" },
+        { id: 94, name: "৯৪. আশ-শারহ (Ash-Sharh)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/94%20Al-Inshirah.mp3" },
+        { id: 95, name: "৯৫. আত-তীন (At-Tin)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/95%20At-Tin.mp3" },
+        { id: 96, name: "৯৬. আল-আলাক (Al-Alaq)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/96%20Al-Alaq.mp3" },
+        { id: 97, name: "৯৭. আল-কদর (Al-Qadr)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/97%20Al-Qadr.mp3" },
+        { id: 98, name: "৯৮. আল-বাইয়্যিনাহ (Al-Bayyinah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/98%20Al-Bayyinah.mp3" },
+        { id: 99, name: "৯৯. আল-যিলযাল (Az-Zilzal)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/99%20Az-Zilzal.mp3" },
+        { id: 100, name: "১০০. আল-আদিয়াত (Al-Adiyat)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/100%20Al-Adiyat.mp3" },
+        { id: 101, name: "১০১. আল-কারিয়াহ (Al-Qari'ah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/101%20Al-Qariah.mp3" },
+        { id: 102, name: "১০২. আত-তাকাসুর (At-Takathur)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/102%20At-Takathur.mp3" },
+        { id: 103, name: "১০৩. আল-আসর (Al-Asr)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/103%20Al-Asr.mp3" },
+        { id: 104, name: "১০৪. আল-হুমাযাহ (Al-Humazah)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/104%20Al-Humaza.mp3" },
+        { id: 105, name: "১০৫. আল-ফীল (Al-Fil)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/105%20Al-F%E5%BC%8Fl.mp3" },
+        { id: 106, name: "১০৬. কুরাইশ (Quraysh)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/106%20Quraysh.mp3" },
+        { id: 107, name: "১০৭. আল-മാউন (Al-Ma'un)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/107%20Al-Maun.mp3" },
+        { id: 108, name: "১০৮. আল-কাওসার (Al-Kawthar)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/108%20Al-Kauthar.mp3" },
+        { id: 109, name: "১০৯. আল-কাফিরুন (Al-Kafirun)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/109%20Al-Kafirun.mp3" },
+        { id: 110, name: "১১০. আন-নসর (An-Nasr)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/110%20An-Nasr.mp3" },
+        { id: 111, name: "১১১. আল-মাসাদ (Al-Masad)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/111%20Al-Lahab.mp3" },
+        { id: 112, name: "১১২. আল-ইখলাস (Al-Ikhlas)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/112%20Al-Ikhlas.mp3" },
+        { id: 113, name: "১১৩. আল-ফালাক (Al-Falaq)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/113%20Al-Falaq.mp3" },
+        { id: 114, name: "১১৪. আন-নাস (An-Nas)", url: "https://downloads.i-onlinemedia.net/quran_recitation/ar-bn/114%20An-Nas.mp3" }
+    ];
+
+    const playlist = document.getElementById('playlist');
+    const audio = document.getElementById('main-audio');
+    const nowPlaying = document.getElementById('now-playing');
+    let currentTrackIndex = 0;
+
+    // ইউজার ইন্টারফেস তৈরি
+    surahs.forEach((surah, index) => {
+        const item = document.createElement('div');
+        item.classList.add('surah-item');
+        item.setAttribute('data-index', index);
+
+        const downloadUrl = surah.url ? surah.url : "#";
+        const downloadAttr = surah.url ? `download="${surah.name}.mp3"` : "";
+
+        item.innerHTML = `
+            <div class="surah-info">${surah.name}</div>
+            <div class="btn-group">
+                <button class="btn btn-play" onclick="playSurah(${index})">▶ প্লে</button>
+                <a href="${downloadUrl}" ${downloadAttr} class="btn btn-download" target="_blank">⬇ ডাউনলোড</a>
+            </div>
+        `;
+
+        playlist.appendChild(item);
+    });
+
+    // প্লে করার মেইন ফাংশন
+    function playSurah(index) {
+        currentTrackIndex = index;
+        const surah = surahs[index];
+
+        if (!surah.url) {
+            alert(`"${surah.name}" এর কোনো অডিও লিংক দেওয়া নেই! অনুগ্রহ করে কোডে লিংকটি বসিয়ে নিন।`);
+            return;
+        }
+
+        audio.src = surah.url;
+        audio.play().catch(error => {
+            console.log("প্লে করতে সমস্যা হচ্ছে: ", error);
+        });
+
+        // বাটন ও ক্লাসের স্টাইল পরিবর্তন
+        document.querySelectorAll('.surah-item').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.btn-play').forEach(el => el.innerText = "▶ প্লে");
+
+        const currentItem = document.querySelector(`[data-index="${index}"]`);
+        if (currentItem) {
+            currentItem.classList.add('active');
+            currentItem.querySelector('.btn-play').innerText = "⏸ বাজছে";
+            currentItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        nowPlaying.innerText = `এখন বাজছে: ${surah.name}`;
+
+        // ব্যাকগ্রাউন্ড নোটিফিকেশন কন্ট্রোল (Chrome মিনিমাইজ বা লকড অবস্থায়)
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: surah.name,
+                artist: 'আল-কোরআন অডিও প্লেয়ার',
+                album: 'পবিত্র কোরআন'
+            });
+
+            navigator.mediaSession.setActionHandler('play', () => audio.play());
+            navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+            navigator.mediaSession.setActionHandler('nexttrack', () => playNext());
+            navigator.mediaSession.setActionHandler('previoustrack', () => {
+                if (currentTrackIndex > 0) playSurah(currentTrackIndex - 1);
+            });
+        }
+    }
+
+    // পরের সূরা প্লে করার অটোমেশন লজিক
+    function playNext() {
+        if (currentTrackIndex < surahs.length - 1) {
+            let nextIndex = currentTrackIndex + 1;
+            playSurah(nextIndex);
+        }
+    }
+
+    // একটি অডিও শেষ হলে স্বয়ংক্রিয়ভাবে নিচের অডিও টি চালু হওয়া (অটো-প্লে)
+    audio.addEventListener('ended', () => {
+        playNext();
+    });
+</script>
+
+</body>
+</html>
